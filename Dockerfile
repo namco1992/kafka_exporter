@@ -1,7 +1,19 @@
-FROM        quay.io/prometheus/busybox:latest
+FROM golang:1.14-alpine
 MAINTAINER  Daniel Qian <qsj.daniel@gmail.com>
 
-COPY kafka_exporter /bin/kafka_exporter
+WORKDIR /go/src/app
+COPY . .
+
+RUN go mod download
+RUN go mod verify
+RUN go build
+
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+
+COPY --from=0 /go/src/app/kafka_exporter .
 
 EXPOSE     9308
-ENTRYPOINT [ "/bin/kafka_exporter" ]
+ENTRYPOINT [ "./kafka_exporter" ]
